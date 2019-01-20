@@ -1,0 +1,54 @@
+{
+    "name": "surda/multi-authenticator",
+    "description": "Multi authenticator for Nette Framework",
+    "keywords": ["nette", "security", "authentication"],
+    "type": "library",
+    "homepage": "http://surani.cz",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Radek Šuráni",
+            "homepage": "http://surani.cz",
+            "email": "radek@surani.cz"
+        }
+    ],
+    "support": {
+        "email": "radek@surani.cz",
+        "issues": "https://github.com/surda/multi-authenticator/issues"
+    },
+    "require": {
+        "php": ">=7.1",
+        "nette/di": "^2.4",
+        "nette/security": "^2.4"
+    },
+    "require-dev": {
+        "nette/tester": "^2.0",
+        "ninjify/nunjuck": "^0.2",
+        "phpstan/phpstan": "^0.11",
+        "phpstan/phpstan-strict-rules": "^0.11",
+        "phpstan/phpstan-nette": "^0.11",
+        "phpstan/phpstan-deprecation-rules": "^0.11"
+    },
+    "conflict": {
+        "nette/di": "<2.4"
+    },
+    "autoload": {
+        "psr-4": {
+            "Surda\\MultiAuthenticator\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\Surda\\MultiAuthenticator\\": "tests/cases"
+        }
+    },
+    "scripts": {
+        "tests": [
+            "vendor/bin/tester -p php -C -c tests/php-unix.ini tests/cases"
+        ],
+        "phpstan": [
+            "vendor/bin/phpstan analyse -l max -c phpstan.neon src"
+        ]
+    },
+    "minimum-stability": "stable"
+}
