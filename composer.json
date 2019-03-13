@@ -44,7 +44,7 @@
     },
     "scripts": {
         "tests": [
-            "vendor/bin/tester -p php -C -c tests/php-unix.ini tests/cases"
+            "vendor/bin/tester -s -p php -C tests/cases"
         ],
         "phpstan": [
             "vendor/bin/phpstan analyse -l max -c phpstan.neon src"
