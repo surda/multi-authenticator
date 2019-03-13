@@ -1,5 +1,10 @@
 # MultiAuthenticator
 
+[![Build Status](https://travis-ci.org/surda/multi-authenticator.svg?branch=master)](https://travis-ci.org/surda/multi-authenticator)
+[![Licence](https://img.shields.io/packagist/l/surda/multi-authenticator.svg?style=flat-square)](https://packagist.org/packages/surda/multi-authenticator)
+[![Latest stable](https://img.shields.io/packagist/v/surda/multi-authenticator.svg?style=flat-square)](https://packagist.org/packages/surda/multi-authenticator)
+[![PHPStan](https://img.shields.io/badge/PHPStan-enabled-brightgreen.svg?style=flat)](https://github.com/phpstan/phpstan)
+
 ## Installation
 
 The recommended way to is via Composer:
