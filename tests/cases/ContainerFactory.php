@@ -6,16 +6,15 @@ use Nette\DI\Compiler;
 use Nette\DI\Container;
 use Nette\DI\ContainerLoader;
 use Surda\MultiAuthenticator\DI\MultiAuthenticatorExtension;
-use Tester;
 
-abstract class TestCase extends Tester\TestCase
+class ContainerFactory
 {
     /**
      * @param array $config
-     * @param mixed  $key
+     * @param mixed $key
      * @return Container
      */
-    protected function createContainer(array $config, $key = NULL): Container
+    public function create(array $config, $key = NULL): Container
     {
         $loader = new ContainerLoader(TEMP_DIR, TRUE);
         $class = $loader->load(function (Compiler $compiler) use ($config): void {

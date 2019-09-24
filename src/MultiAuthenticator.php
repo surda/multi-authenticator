@@ -5,20 +5,23 @@ namespace Surda\MultiAuthenticator;
 use Nette\Security\IAuthenticator;
 use Nette\Security\AuthenticationException;
 use Nette\Security\IIdentity;
+use Nette\SmartObject;
 use Surda\MultiAuthenticator\Exception\AuthenticatorNotFoundException;
 use Surda\MultiAuthenticator\Resolver\AuthenticatorResolver;
 
 class MultiAuthenticator implements IAuthenticator
 {
+    use SmartObject;
+
     /** @var AuthenticatorResolver */
-    private $authenticatorResolver;
+    private $resolver;
 
     /**
-     * @param AuthenticatorResolver $authenticatorResolver
+     * @param AuthenticatorResolver $resolver
      */
-    public function __construct(AuthenticatorResolver $authenticatorResolver)
+    public function __construct(AuthenticatorResolver $resolver)
     {
-        $this->authenticatorResolver = $authenticatorResolver;
+        $this->resolver = $resolver;
     }
 
     /**
@@ -31,12 +34,10 @@ class MultiAuthenticator implements IAuthenticator
         [$username] = $credentials;
 
         try {
-            $authenticator = $this->authenticatorResolver->resolveByUsername($username);
+            $authenticator = $this->resolver->resolveByUsername($username);
         }
         catch (AuthenticatorNotFoundException $e) {
             throw new AuthenticationException('Authenticator not found.', self::FAILURE);
-
-            // TODO loging
         }
 
         return $authenticator->authenticate($credentials);

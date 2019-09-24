@@ -2,11 +2,12 @@
 
 namespace Tests\Surda\MultiAuthenticator\DI;
 
+use Nette\DI\Container;
 use Surda\MultiAuthenticator\MultiAuthenticator;
 use Surda\MultiAuthenticator\Resolver\AuthenticatorResolver;
 use Tester\Assert;
-use Tests\Surda\MultiAuthenticator\Authenticator\DebugAuthenticator;
-use Tests\Surda\MultiAuthenticator\TestCase;
+use Tester\TestCase;
+use Tests\Surda\MultiAuthenticator\ContainerFactory;
 
 require __DIR__ . '/../../bootstrap.php';
 
@@ -17,13 +18,8 @@ class MultiAuthenticatorExtensionTest extends TestCase
 {
     public function testExtension()
     {
-        $container = $this->createContainer([
-            'multiAuthenticator' => [
-                'authenticators' => [
-                    DebugAuthenticator::class,
-                ]
-            ]
-        ]);
+        /** @var Container $container */
+        $container = (new ContainerFactory())->create([],1);
 
         $resolver = $container->getService('multiAuthenticator.resolver');
         Assert::true($resolver instanceof AuthenticatorResolver);

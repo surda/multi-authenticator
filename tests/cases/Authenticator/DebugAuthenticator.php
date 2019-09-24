@@ -6,37 +6,31 @@ use Nette\Security\AuthenticationException;
 use Nette\Security\IAuthenticator;
 use Nette\Security\Identity;
 use Nette\Security\IIdentity;
-use Surda\MultiAuthenticator\IResolvableAuthenticator;
 
-class DebugAuthenticator implements IResolvableAuthenticator
+class DebugAuthenticator implements IAuthenticator
 {
     /** @var bool */
-    private $pass;
+    public $pass;
+
+    /** @var string */
+    public $type;
+
+    /** @var IIdentity|null */
+    public $identity;
 
     /** @var int */
     private $id;
 
-    /** @var string */
-    private $type;
-
-    /** @var array */
-    private $criteria;
-
-    /** @var IIdentity|null */
-    private $identity;
-
     /**
      * @param bool   $pass
-     * @param int    $id
      * @param string $type
-     * @param array  $criteria
+     * @param int    $id
      */
-    public function __construct(bool $pass = TRUE, int $id = 1, $type = 'debug', array $criteria = [])
+    public function __construct(bool $pass = TRUE, $type = 'debug', int $id = 1)
     {
         $this->pass = $pass;
-        $this->id = $id;
         $this->type = $type;
-        $this->criteria = $criteria;
+        $this->id = $id;
     }
 
     public function setIdentity(IIdentity $identity): void
@@ -45,10 +39,11 @@ class DebugAuthenticator implements IResolvableAuthenticator
     }
 
     /**
+     * @param array $credentials
      * @return IIdentity
      * @throws AuthenticationException
      */
-    function authenticate(array $credentials)
+    function authenticate(array $credentials): IIdentity
     {
         if ($this->pass === FALSE) {
             throw new AuthenticationException('Cannot login', IAuthenticator::FAILURE);
@@ -59,28 +54,5 @@ class DebugAuthenticator implements IResolvableAuthenticator
         }
 
         return new Identity($this->id, NULL, NULL);
-    }
-
-    /**
-     * @return string
-     */
-    public function getType(): string
-    {
-        return $this->type;
-    }
-
-    /**
-     * @param string $subject
-     * @return bool
-     */
-    public function isMatched(string $subject): bool
-    {
-        foreach ($this->criteria as $criterion) {
-            if (strpos($subject, $criterion) !== FALSE) {
-                return TRUE;
-            }
-        }
-
-        return FALSE;
     }
 }

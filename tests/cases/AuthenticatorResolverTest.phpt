@@ -2,12 +2,13 @@
 
 namespace Tests\Surda\MultiAuthenticator\DI;
 
+use Nette\DI\Container;
 use Nette\DI\Statement;
-use Surda\MultiAuthenticator\Exception\AuthenticatorNotFoundException;
 use Surda\MultiAuthenticator\Resolver\AuthenticatorResolver;
-use Tester\Assert;
 use Tests\Surda\MultiAuthenticator\Authenticator\DebugAuthenticator;
-use Tests\Surda\MultiAuthenticator\TestCase;
+use Tester\Assert;
+use Tester\TestCase;
+use Tests\Surda\MultiAuthenticator\ContainerFactory;
 
 require __DIR__ . '/../bootstrap.php';
 
@@ -16,50 +17,95 @@ require __DIR__ . '/../bootstrap.php';
  */
 class AuthenticatorResolverTest extends TestCase
 {
-    public function testResolveByUsername()
+    public function testDefaultAuthenticator()
     {
-        $config = [
+        /** @var Container $container */
+        $container = (new ContainerFactory())->create([
             'multiAuthenticator' => [
-                'default' => new Statement(DebugAuthenticator::class, [TRUE, 1, 'default']),
                 'authenticators' => [
-                    new Statement(DebugAuthenticator::class, [TRUE, 1, 'ldap', ['ad.domain.com\\', '@@ad.domain.com']]),
-                ]
-            ]
-        ];
+                    'default' => new Statement(DebugAuthenticator::class, [TRUE, 'default']),
+                ],
+            ],
+        ], 3);
 
-        $container = $this->createContainer($config, 1);
+        Assert::same('default', $container->getByType(AuthenticatorResolver::class)->getDefaultAuthenticator()->type);
 
-        /** @var AuthenticatorResolver $resolver */
-        $resolver = $container->getByType(AuthenticatorResolver::class);
+        /** @var Container $container */
+        $container2 = (new ContainerFactory())->create([
+            'multiAuthenticator' => [
+                'default' => new Statement(DebugAuthenticator::class, [TRUE, 'default']),
+            ],
+        ], 4);
 
-        Assert::same('ldap', $resolver->resolveByUsername('ad.domain.com\username')->getType());
-        Assert::same('ldap', $resolver->resolveByUsername('username@ad.domain.com')->getType());
-        Assert::same('default', $resolver->resolveByUsername('username')->getType());
+        Assert::same('default', $container->getByType(AuthenticatorResolver::class)->getDefaultAuthenticator()->type);
+
+        /** @var Container $container */
+        $container3 = (new ContainerFactory())->create([
+            'multiAuthenticator' => [
+                'default' => new Statement(DebugAuthenticator::class, [TRUE, 'default']),
+                'authenticators' => [
+                    'default' => new Statement(DebugAuthenticator::class, [TRUE, 'default2']),
+                ],
+            ],
+        ], 5);
+
+        Assert::same('default', $container->getByType(AuthenticatorResolver::class)->getDefaultAuthenticator()->type);
     }
 
-    public function testResolveByType()
+    public function testAuthenticatorByUsername()
     {
-        $config = [
+        /** @var Container $container */
+        $container = (new ContainerFactory())->create([
             'multiAuthenticator' => [
+                'rules' => [
+                    'ldap' => [
+                        '#^.+@ad.domain.com$#',
+                    ],
+                    'db' => [
+                        '#^.+bar$#',
+                    ],
+                ],
                 'authenticators' => [
-                    new Statement(DebugAuthenticator::class, [TRUE, 1, 'foo', ['foo']]),
-                    new Statement(DebugAuthenticator::class, [TRUE, 1, 'bar', ['bar']]),
-                ]
-            ]
-        ];
-        $container = $this->createContainer($config, 2);
+                    'default' => new Statement(DebugAuthenticator::class, [TRUE, 'default']),
+                    'ldap' => new Statement(DebugAuthenticator::class, [TRUE, 'ldap']),
+                ],
+            ],
+        ], 1);
 
         /** @var AuthenticatorResolver $resolver */
         $resolver = $container->getByType(AuthenticatorResolver::class);
 
-        Assert::same('foo', $resolver->resolveByType('foo')->getType());
-        Assert::same('bar', $resolver->resolveByType('bar')->getType());
+        Assert::same('ldap', $resolver->resolveByUsername('username@ad.domain.com')->type);
+        Assert::same('default', $resolver->resolveByUsername('username@ad.domain.org')->type);
 
-        Assert::exception(
-            function () use ($resolver): void {
-                $resolver->resolveByType('test');
-            }, AuthenticatorNotFoundException::class, "Authenticator type 'test' is not registered."
-        );
+        Assert::exception(function () use ($resolver) {
+            $resolver->resolveByUsername('foobar');
+        }, \Surda\MultiAuthenticator\Exception\AuthenticatorNotFoundException::class, 'Authenticator type \'db\' is not registered.');
+    }
+
+    public function testAuthenticatorByType()
+    {
+        /** @var Container $container */
+        $container = (new ContainerFactory())->create([
+            'multiAuthenticator' => [
+                'authenticators' => [
+                    'default' => new Statement(DebugAuthenticator::class, [TRUE, 'default']),
+                    'ldap' => new Statement(DebugAuthenticator::class, [TRUE, 'ldap']),
+                ],
+            ],
+        ], 2);
+
+        /** @var AuthenticatorResolver $resolver */
+        $resolver = $container->getByType(AuthenticatorResolver::class);
+
+        Assert::same('ldap', $resolver->resolveByType('ldap')->type);
+        Assert::same('default', $resolver->resolveByType('default')->type);
+
+        Assert::exception(function () use ($resolver) {
+            $resolver->resolveByType('db');
+        }, \Surda\MultiAuthenticator\Exception\AuthenticatorNotFoundException::class, 'Authenticator type \'db\' is not registered.');
+
+        Assert::same('default', $resolver->getDefaultAuthenticator()->type);
     }
 }
 

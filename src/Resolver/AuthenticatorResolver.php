@@ -2,29 +2,41 @@
 
 namespace Surda\MultiAuthenticator\Resolver;
 
+use Nette\Security\IAuthenticator;
+use Nette\Utils\Strings;
 use Surda\MultiAuthenticator\Exception\AuthenticatorNotFoundException;
-use Surda\MultiAuthenticator\Exception\InvalidAuthenticatorException;
-use Surda\MultiAuthenticator\IResolvableAuthenticator;
 
 class AuthenticatorResolver
 {
-    /** @var IResolvableAuthenticator[] */
+    /** @var IAuthenticator[] */
     private $authenticators = [];
 
-    /** @var IResolvableAuthenticator */
+    /** @var IAuthenticator */
     private $defaultAuthenticator;
+
+    /** @var array */
+    private $rules;
+
+    /**
+     * @param array $rules
+     */
+    public function __construct(array $rules = [])
+    {
+        $this->rules = $rules;
+    }
 
     /**
      * @param string $username
-     * @return IResolvableAuthenticator
+     * @return IAuthenticator
      * @throws AuthenticatorNotFoundException
      */
-    public function resolveByUsername(string $username): IResolvableAuthenticator
+    public function resolveByUsername(string $username): IAuthenticator
     {
-        /** @var IResolvableAuthenticator $authenticator */
-        foreach ($this->getAuthenticators() as $authenticator) {
-            if ($authenticator->isMatched($username)) {
-                return $authenticator;
+        foreach ($this->getRules() as $authenticatorType => $patterns) {
+            foreach ($patterns as $pattern) {
+                if (Strings::match($username, $pattern) !== NULL) {
+                    return $this->resolveByType($authenticatorType);
+                }
             }
         }
 
@@ -37,10 +49,10 @@ class AuthenticatorResolver
 
     /**
      * @param string $type
-     * @return IResolvableAuthenticator
+     * @return IAuthenticator
      * @throws AuthenticatorNotFoundException
      */
-    public function resolveByType(string $type): IResolvableAuthenticator
+    public function resolveByType(string $type): IAuthenticator
     {
         if (array_key_exists($type, $this->authenticators)) {
             return $this->authenticators[$type];
@@ -50,18 +62,19 @@ class AuthenticatorResolver
     }
 
     /**
-     * @return IResolvableAuthenticator[]
+     * @param string         $type
+     * @param IAuthenticator $authenticator
      */
-    public function getAuthenticators(): array
+    public function addAuthenticator(string $type, IAuthenticator $authenticator): void
     {
-        return $this->authenticators;
+        $this->authenticators[$type] = $authenticator;
     }
 
     /**
-     * @return IResolvableAuthenticator
+     * @return IAuthenticator
      * @throws AuthenticatorNotFoundException
      */
-    public function getDefaultAuthenticator(): IResolvableAuthenticator
+    public function getDefaultAuthenticator(): IAuthenticator
     {
         if ($this->defaultAuthenticator === NULL) {
             throw new AuthenticatorNotFoundException();
@@ -71,20 +84,34 @@ class AuthenticatorResolver
     }
 
     /**
-     * @param IResolvableAuthenticator $authenticator
-     * @throws InvalidAuthenticatorException
+     * @param IAuthenticator $authenticator
      */
-    public function addAuthenticator(IResolvableAuthenticator $authenticator): void
+    public function setDefaultAuthenticator(IAuthenticator $authenticator): void
     {
-        $this->authenticators[$authenticator->getType()] = $authenticator;
+        $this->defaultAuthenticator = $authenticator;
     }
 
     /**
-     * @param IResolvableAuthenticator $authenticator
-     * @throws InvalidAuthenticatorException
+     * @return array
      */
-    public function setDefaultAuthenticator(IResolvableAuthenticator $authenticator): void
+    public function getRules(): array
     {
-        $this->defaultAuthenticator = $authenticator;
+        return $this->rules;
+    }
+
+    /**
+     * @param array $rules
+     */
+    public function setRules(array $rules): void
+    {
+        $this->rules = $rules;
+    }
+
+    /**
+     * @return IAuthenticator[]
+     */
+    public function getAuthenticators(): array
+    {
+        return $this->authenticators;
     }
 }

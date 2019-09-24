@@ -18,19 +18,16 @@
     },
     "require": {
         "php": ">=7.1",
-        "nette/di": "^2.4",
-        "nette/security": "^2.4"
+        "nette/di": "^3.0",
+        "nette/security": "^3.0"
     },
     "require-dev": {
         "nette/tester": "^2.0",
-        "ninjify/nunjuck": "^0.2",
+        "ninjify/nunjuck": "0.3.x-dev",
         "phpstan/phpstan": "^0.11",
         "phpstan/phpstan-strict-rules": "^0.11",
         "phpstan/phpstan-nette": "^0.11",
         "phpstan/phpstan-deprecation-rules": "^0.11"
-    },
-    "conflict": {
-        "nette/di": "<2.4"
     },
     "autoload": {
         "psr-4": {
@@ -43,6 +40,9 @@
         }
     },
     "scripts": {
+        "da": [
+            "composer dump-autoload -o"
+        ],
         "tests": [
             "vendor/bin/tester -s -p php -C tests/cases"
         ],

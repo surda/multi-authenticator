@@ -25,31 +25,48 @@ extensions:
 ```yaml
 multiAuthenticator:
     authenticators:
-        - MyLdapAuthenticator
-        - MyDatabaseAuthenticator
-        - ...
+        ldap: MyLdapAuthenticator
+        default: MyDefaultAuthenticator
+    rules:
+        ldap:
+            - '#^.+@ad.domain.com$#'
+            - '#^sos\\.+$#'
+            - ...
+```
+
+## Default Authenticator
+
+```yaml
+multiAuthenticator:
+    authenticators:
+        default: MyDefaultAuthenticator
+        # or
+    default: MyDefaultAuthenticator
 ```
 
 List of all configuration options:
 
 ```yaml
 multiAuthenticator:
-    authenticators:
-        - MyLdapAuthenticator
-        - MyDatabaseAuthenticator
-        - ...
-    default: MyDefaultAuthenticator
-    autowired: true # MultiAuthenticator::class
+    authenticators: # Authenticators for resolve by rules
+    rules:
+    resolver: \Surda\MultiAuthenticator\AuthenticatorResolver::class
+    authenticator: \Surda\MultiAuthenticator\MultiAuthenticator::class
+    default: # Default authenticator 
 ```
 
 ## Using via MultiAuthenticator (default)
 
-Autowired MultiAuthenticator class
+config.neon
+
+```yaml
+security.authenticator: @Surda\MultiAuthenticator\MultiAuthenticator
+```
 
 ```php
 try {
     $this->user->login($values->username, $values->password);
-} catch (Nette\Security\AuthenticationException $e) {
+} catch (\Nette\Security\AuthenticationException $e) {
     // ...
 }
 ```
@@ -58,6 +75,7 @@ try {
 
 ```php
 use Surda\MultiAuthenticator\Resolver\AuthenticatorResolver;
+use Surda\MultiAuthenticator\Exception\AuthenticatorNotFoundException;
 
 /** @var AuthenticatorResolver */
 private $resolver;
@@ -71,13 +89,13 @@ public function __construct(AuthenticatorResolver $resolver)
 }
 
 try {
-    $this->user->setAuthenticator($this->resolver->resolveByUsername('ad.domain.com\myusername'));
+    $this->user->setAuthenticator($this->resolver->resolveByUsername('username@ad.domain.com'));
     // or
     $this->user->setAuthenticator($this->resolver->resolveByType('ldap'));
     
     try {
         $this->user->login($values->username, $values->password);
-    } catch (Nette\Security\AuthenticationException $e) {
+    } catch (\Nette\Security\AuthenticationException $e) {
         // ...
     }
 }

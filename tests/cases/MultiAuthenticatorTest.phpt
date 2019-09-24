@@ -2,12 +2,16 @@
 
 namespace Tests\Surda\MultiAuthenticator\DI;
 
+use Nette\DI\Container;
+use Nette\Security\AuthenticationException;
 use Nette\Security\IIdentity;
+use Surda\MultiAuthenticator\Exception\AuthenticatorNotFoundException;
 use Surda\MultiAuthenticator\MultiAuthenticator;
 use Tester\Assert;
 use Nette\DI\Statement;
+use Tester\TestCase;
 use Tests\Surda\MultiAuthenticator\Authenticator\DebugAuthenticator;
-use Tests\Surda\MultiAuthenticator\TestCase;
+use Tests\Surda\MultiAuthenticator\ContainerFactory;
 
 require __DIR__ . '/../bootstrap.php';
 
@@ -16,26 +20,62 @@ require __DIR__ . '/../bootstrap.php';
  */
 class MultiAuthenticatorTest extends TestCase
 {
-    public function testAuthenticator()
+    public function testAuthentification()
     {
-        $config = [
+        /** @var Container $container */
+        $container = (new ContainerFactory())->create([
             'multiAuthenticator' => [
-                'default' => new Statement(DebugAuthenticator::class, [TRUE, 1, 'default']),
+                'rules' => [
+                    'ldap' => [
+                        '#^.+@ad.domain.com$#',
+                    ],
+                ],
                 'authenticators' => [
-                    new Statement(DebugAuthenticator::class, [TRUE, 2, 'ldap', ['ad.domain.com\\', '@@ad.domain.com']]),
-                ]
-            ]
-        ];
-
-        $container = $this->createContainer($config);
+                    'default' => new Statement(DebugAuthenticator::class, [TRUE, 'default', 1]),
+                    'ldap' => new Statement(DebugAuthenticator::class, [TRUE, 'ldap', 2]),
+                ],
+            ],
+        ], 10);
 
         /** @var MultiAuthenticator $authenticator */
         $authenticator = $container->getByType(MultiAuthenticator::class);
 
-        Assert::type(IIdentity::class, $authenticator->authenticate(['ad.domain.com\username', 'password']));
+        Assert::type(IIdentity::class, $authenticator->authenticate(['username', 'password']));
 
         Assert::same(1, $authenticator->authenticate(['username', 'password'])->getId());
-        Assert::same(2, $authenticator->authenticate(['ad.domain.com\username', 'password'])->getId());
+        Assert::same(2, $authenticator->authenticate(['username@ad.domain.com', 'password'])->getId());
+    }
+
+    public function testFailureAuthentification()
+    {
+        /** @var Container $container */
+        $container = (new ContainerFactory())->create([
+            'multiAuthenticator' => [
+                'authenticators' => [
+                    'default' => new Statement(DebugAuthenticator::class, [FALSE, 'default']),
+                ],
+            ],
+        ], 11);
+
+        /** @var MultiAuthenticator $authenticator */
+        $authenticator = $container->getByType(MultiAuthenticator::class);
+
+        Assert::exception(function () use ($authenticator) {
+            $authenticator->authenticate(['username', 'password']);
+        }, AuthenticationException::class, 'Cannot login');
+    }
+
+    public function testAuthentificatorNotFound()
+    {
+        /** @var Container $container */
+        $container = (new ContainerFactory())->create([], 12);
+
+        /** @var MultiAuthenticator $authenticator */
+        $authenticator = $container->getByType(MultiAuthenticator::class);
+
+        Assert::exception(function () use ($authenticator) {
+            $authenticator->authenticate(['username', 'password']);
+        }, AuthenticationException::class, 'Authenticator not found.');
     }
 }
 
