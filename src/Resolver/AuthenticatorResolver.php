@@ -14,11 +14,11 @@ class AuthenticatorResolver
     /** @var IAuthenticator */
     private $defaultAuthenticator;
 
-    /** @var array */
+    /** @var array<mixed> */
     private $rules;
 
     /**
-     * @param array $rules
+     * @param array<mixed> $rules
      */
     public function __construct(array $rules = [])
     {
@@ -92,7 +92,7 @@ class AuthenticatorResolver
     }
 
     /**
-     * @return array
+     * @return array<mixed>
      */
     public function getRules(): array
     {
@@ -100,7 +100,7 @@ class AuthenticatorResolver
     }
 
     /**
-     * @param array $rules
+     * @param array<mixed> $rules
      */
     public function setRules(array $rules): void
     {

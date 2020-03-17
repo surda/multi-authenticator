@@ -25,7 +25,7 @@ class MultiAuthenticator implements IAuthenticator
     }
 
     /**
-     * @param array $credentials
+     * @param array<mixed> $credentials
      * @return IIdentity
      * @throws AuthenticationException
      */
