@@ -1,14 +1,14 @@
 <?php declare(strict_types=1);
 
-namespace Tests\Surda\MultiAuthenticator\DI;
+namespace Tests\Surda\MultiAuthenticator;
 
 use Nette\DI\Container;
-use Nette\DI\Statement;
+use Nette\DI\Definitions\Statement;
+use Surda\MultiAuthenticator\Exception\AuthenticatorNotFoundException;
 use Surda\MultiAuthenticator\Resolver\AuthenticatorResolver;
 use Tests\Surda\MultiAuthenticator\Authenticator\DebugAuthenticator;
 use Tester\Assert;
 use Tester\TestCase;
-use Tests\Surda\MultiAuthenticator\ContainerFactory;
 
 require __DIR__ . '/../bootstrap.php';
 
@@ -37,7 +37,7 @@ class AuthenticatorResolverTest extends TestCase
             ],
         ], 4);
 
-        Assert::same('default', $container->getByType(AuthenticatorResolver::class)->getDefaultAuthenticator()->type);
+        Assert::same('default', $container2->getByType(AuthenticatorResolver::class)->getDefaultAuthenticator()->type);
 
         /** @var Container $container */
         $container3 = (new ContainerFactory())->create([
@@ -49,7 +49,7 @@ class AuthenticatorResolverTest extends TestCase
             ],
         ], 5);
 
-        Assert::same('default', $container->getByType(AuthenticatorResolver::class)->getDefaultAuthenticator()->type);
+        Assert::same('default', $container3->getByType(AuthenticatorResolver::class)->getDefaultAuthenticator()->type);
     }
 
     public function testAuthenticatorByUsername()
@@ -80,7 +80,7 @@ class AuthenticatorResolverTest extends TestCase
 
         Assert::exception(function () use ($resolver) {
             $resolver->resolveByUsername('foobar');
-        }, \Surda\MultiAuthenticator\Exception\AuthenticatorNotFoundException::class, 'Authenticator type \'db\' is not registered.');
+        }, AuthenticatorNotFoundException::class, 'Authenticator type \'db\' is not registered.');
     }
 
     public function testAuthenticatorByType()
@@ -103,7 +103,7 @@ class AuthenticatorResolverTest extends TestCase
 
         Assert::exception(function () use ($resolver) {
             $resolver->resolveByType('db');
-        }, \Surda\MultiAuthenticator\Exception\AuthenticatorNotFoundException::class, 'Authenticator type \'db\' is not registered.');
+        }, AuthenticatorNotFoundException::class, 'Authenticator type \'db\' is not registered.');
 
         Assert::same('default', $resolver->getDefaultAuthenticator()->type);
     }

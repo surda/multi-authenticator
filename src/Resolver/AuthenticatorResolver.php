@@ -2,16 +2,16 @@
 
 namespace Surda\MultiAuthenticator\Resolver;
 
-use Nette\Security\IAuthenticator;
+use Nette\Security\Authenticator;
 use Nette\Utils\Strings;
 use Surda\MultiAuthenticator\Exception\AuthenticatorNotFoundException;
 
 class AuthenticatorResolver
 {
-    /** @var IAuthenticator[] */
+    /** @var Authenticator[] */
     private $authenticators = [];
 
-    /** @var IAuthenticator */
+    /** @var Authenticator */
     private $defaultAuthenticator;
 
     /** @var array<mixed> */
@@ -26,11 +26,9 @@ class AuthenticatorResolver
     }
 
     /**
-     * @param string $username
-     * @return IAuthenticator
      * @throws AuthenticatorNotFoundException
      */
-    public function resolveByUsername(string $username): IAuthenticator
+    public function resolveByUsername(string $username): Authenticator
     {
         foreach ($this->getRules() as $authenticatorType => $patterns) {
             foreach ($patterns as $pattern) {
@@ -48,11 +46,9 @@ class AuthenticatorResolver
     }
 
     /**
-     * @param string $type
-     * @return IAuthenticator
      * @throws AuthenticatorNotFoundException
      */
-    public function resolveByType(string $type): IAuthenticator
+    public function resolveByType(string $type): Authenticator
     {
         if (array_key_exists($type, $this->authenticators)) {
             return $this->authenticators[$type];
@@ -61,20 +57,15 @@ class AuthenticatorResolver
         throw new AuthenticatorNotFoundException(sprintf("Authenticator type '%s' is not registered.", $type));
     }
 
-    /**
-     * @param string         $type
-     * @param IAuthenticator $authenticator
-     */
-    public function addAuthenticator(string $type, IAuthenticator $authenticator): void
+    public function addAuthenticator(string $type, Authenticator $authenticator): void
     {
         $this->authenticators[$type] = $authenticator;
     }
 
     /**
-     * @return IAuthenticator
      * @throws AuthenticatorNotFoundException
      */
-    public function getDefaultAuthenticator(): IAuthenticator
+    public function getDefaultAuthenticator(): Authenticator
     {
         if ($this->defaultAuthenticator === NULL) {
             throw new AuthenticatorNotFoundException();
@@ -83,10 +74,7 @@ class AuthenticatorResolver
         return $this->defaultAuthenticator;
     }
 
-    /**
-     * @param IAuthenticator $authenticator
-     */
-    public function setDefaultAuthenticator(IAuthenticator $authenticator): void
+    public function setDefaultAuthenticator(Authenticator $authenticator): void
     {
         $this->defaultAuthenticator = $authenticator;
     }
@@ -108,7 +96,7 @@ class AuthenticatorResolver
     }
 
     /**
-     * @return IAuthenticator[]
+     * @return Authenticator[]
      */
     public function getAuthenticators(): array
     {

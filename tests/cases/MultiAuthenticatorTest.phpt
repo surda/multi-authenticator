@@ -1,17 +1,15 @@
 <?php declare(strict_types=1);
 
-namespace Tests\Surda\MultiAuthenticator\DI;
+namespace Tests\Surda\MultiAuthenticator;
 
 use Nette\DI\Container;
 use Nette\Security\AuthenticationException;
 use Nette\Security\IIdentity;
-use Surda\MultiAuthenticator\Exception\AuthenticatorNotFoundException;
 use Surda\MultiAuthenticator\MultiAuthenticator;
 use Tester\Assert;
-use Nette\DI\Statement;
+use Nette\DI\Definitions\Statement;
 use Tester\TestCase;
 use Tests\Surda\MultiAuthenticator\Authenticator\DebugAuthenticator;
-use Tests\Surda\MultiAuthenticator\ContainerFactory;
 
 require __DIR__ . '/../bootstrap.php';
 
@@ -40,10 +38,10 @@ class MultiAuthenticatorTest extends TestCase
         /** @var MultiAuthenticator $authenticator */
         $authenticator = $container->getByType(MultiAuthenticator::class);
 
-        Assert::type(IIdentity::class, $authenticator->authenticate(['username', 'password']));
+        Assert::type(IIdentity::class, $authenticator->authenticate('username', 'password'));
 
-        Assert::same(1, $authenticator->authenticate(['username', 'password'])->getId());
-        Assert::same(2, $authenticator->authenticate(['username@ad.domain.com', 'password'])->getId());
+        Assert::same(1, $authenticator->authenticate('username', 'password')->getId());
+        Assert::same(2, $authenticator->authenticate('username@ad.domain.com', 'password')->getId());
     }
 
     public function testFailureAuthentification()
@@ -61,7 +59,7 @@ class MultiAuthenticatorTest extends TestCase
         $authenticator = $container->getByType(MultiAuthenticator::class);
 
         Assert::exception(function () use ($authenticator) {
-            $authenticator->authenticate(['username', 'password']);
+            $authenticator->authenticate('username', 'password');
         }, AuthenticationException::class, 'Cannot login');
     }
 
@@ -74,7 +72,7 @@ class MultiAuthenticatorTest extends TestCase
         $authenticator = $container->getByType(MultiAuthenticator::class);
 
         Assert::exception(function () use ($authenticator) {
-            $authenticator->authenticate(['username', 'password']);
+            $authenticator->authenticate('username', 'password');
         }, AuthenticationException::class, 'Authenticator not found.');
     }
 }
